@@ -12,6 +12,7 @@ import '../view/blogdetail.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
+// Widget to display a blog item in a grid
 class BlogGridItem extends StatefulWidget {
   final Blog blog;
 
@@ -21,27 +22,29 @@ class BlogGridItem extends StatefulWidget {
   State<BlogGridItem> createState() => _BlogGridItemState();
 }
 
+// State for the BlogGridItem widget
 class _BlogGridItemState extends State<BlogGridItem> {
   late StreamSubscription subscription;
   bool isDeviceConnected = false;
   bool isAlertSet = false;
 
+  // Load data in initState before loading into the main screen
   @override
   void initState() {
     getConnectivity();
     super.initState();
   }
 
-  getConnectivity() =>
-      subscription = Connectivity().onConnectivityChanged.listen(
-        (ConnectivityResult result) async {
-          isDeviceConnected = await InternetConnectionChecker().hasConnection;
-          if (!isDeviceConnected && isAlertSet == false) {
-            showDialogBox();
-            setState(() => isAlertSet = true);
-          }
-        },
-      );
+  // Check whether the device is connected to the internet or not
+  getConnectivity() => subscription = Connectivity()
+          .onConnectivityChanged
+          .listen((ConnectivityResult result) async {
+        isDeviceConnected = await InternetConnectionChecker().hasConnection;
+        if (!isDeviceConnected && !isAlertSet) {
+          showDialogBox();
+          setState(() => isAlertSet = true);
+        }
+      });
 
   @override
   void dispose() {
@@ -58,6 +61,8 @@ class _BlogGridItemState extends State<BlogGridItem> {
     final heading =
         screenWidth * 0.039 * MediaQuery.of(context).textScaleFactor;
     final radius = MediaQuery.of(context).size;
+
+    // GestureDetector for navigating to the BlogDetailsPage when tapped
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -78,7 +83,7 @@ class _BlogGridItemState extends State<BlogGridItem> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Column(
             children: [
-              // Display a placeholder image if there's an error loading the image
+              // Display a placeholder image while loading or if there's an error loading the image
               CachedNetworkImage(
                 height: screenWidth > 550 ? screenHeight / 5 : screenHeight / 7,
                 width: screenWidth / 1.4,
@@ -94,6 +99,7 @@ class _BlogGridItemState extends State<BlogGridItem> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    // Display truncated title with ellipsis
                     Text(
                       _getFewWordsFromTitle(widget.blog.routeTitle),
                       overflow: TextOverflow.ellipsis,
@@ -107,6 +113,7 @@ class _BlogGridItemState extends State<BlogGridItem> {
                     ),
                     Row(
                       children: [
+                        // Display author's avatar and name along with the blog's creation date
                         CircleAvatar(
                           radius: 10,
                           child: Icon(
@@ -144,6 +151,7 @@ class _BlogGridItemState extends State<BlogGridItem> {
     );
   }
 
+  // Function to get a truncated version of the blog title with a specified word limit
   String _getFewWordsFromTitle(String title) {
     // Define the number of words to show (e.g., 5 words)
     int maxWords = 5;
@@ -157,6 +165,7 @@ class _BlogGridItemState extends State<BlogGridItem> {
     return shortenedTitle;
   }
 
+  // Show a dialog box when there's no internet connection
   showDialogBox() => showCupertinoDialog<String>(
         context: context,
         builder: (BuildContext context) => CupertinoAlertDialog(
@@ -169,7 +178,7 @@ class _BlogGridItemState extends State<BlogGridItem> {
                 setState(() => isAlertSet = false);
                 isDeviceConnected =
                     await InternetConnectionChecker().hasConnection;
-                if (!isDeviceConnected && isAlertSet == false) {
+                if (!isDeviceConnected && !isAlertSet) {
                   showDialogBox();
                   setState(() => isAlertSet = true);
                 }

@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../../model/blogmodel.dart';
 
+// A ChangeNotifier class for managing the list of blogs
 class BlogModel extends ChangeNotifier {
   List<Blog> _blogs = [];
   List<Blog> get blogs => _blogs;
@@ -19,20 +20,27 @@ class BlogModel extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
+        // Decode the response body from JSON format
         final jsonData = json.decode(response.body);
+
+        // Map the JSON data to a list of Blog objects using the fromJson constructor
         _blogs = (jsonData['blogs'] as List)
             .map((item) => Blog.fromJson(item))
             .toList();
+
+        // Notify listeners that the data has changed, so UI can be updated
         notifyListeners();
       } else {
+        // Show a SnackBar with an error message if the API request fails
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Failed to fetch blogs. Status code: ${response.statusCode}'),
+                'Failed to fetch the blogs Status code: ${response.statusCode}'),
           ),
         );
       }
     } catch (e) {
+      // Show a SnackBar with an error message if an exception occurs
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error fetching blogs: $e'),
