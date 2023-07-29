@@ -1,13 +1,50 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:provider/provider.dart';
 import 'package:sehatghar/controller/provider/blogprovider.dart';
 
 import '../widgets/griditem.dart';
 
-class BlogGridPage1 extends StatelessWidget {
+class BlogGridPage1 extends StatefulWidget {
+  @override
+  State<BlogGridPage1> createState() => _BlogGridPage1State();
+}
+
+class _BlogGridPage1State extends State<BlogGridPage1> {
+  late StreamSubscription subscription;
+  bool isDeviceConnected = false;
+  bool isAlertSet = false;
+
+  // Load data in initState before loading into the main screen
+  @override
+  void initState() {
+    getConnectivity();
+    super.initState();
+  }
+
+  // Check whether the device is connected to the internet or not
+  getConnectivity() => subscription = Connectivity()
+          .onConnectivityChanged
+          .listen((ConnectivityResult result) async {
+        isDeviceConnected = await InternetConnectionChecker().hasConnection;
+        if (!isDeviceConnected && !isAlertSet) {
+          showDialogBox();
+          setState(() => isAlertSet = true);
+        }
+      });
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -94,4 +131,27 @@ class BlogGridPage1 extends StatelessWidget {
   void _nextPage(BuildContext context, BlogModel model) {
     model.nextPage(context);
   }
+
+  showDialogBox() => showCupertinoDialog<String>(
+        context: context,
+        builder: (BuildContext context) => CupertinoAlertDialog(
+          title: const Text('No Connection'),
+          content: const Text('Please check your internet connectivity'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context, 'Cancel');
+                setState(() => isAlertSet = false);
+                isDeviceConnected =
+                    await InternetConnectionChecker().hasConnection;
+                if (!isDeviceConnected && !isAlertSet) {
+                  showDialogBox();
+                  setState(() => isAlertSet = true);
+                }
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
 }
